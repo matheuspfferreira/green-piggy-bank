@@ -3,10 +3,7 @@ package org.greenpiggybank.database;
 import org.greenpiggybank.database.ConexaoBanco;
 import org.greenpiggybank.classes.player.Player;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class PlayerDAO {
     private ConexaoBanco conexaoBanco;
@@ -14,6 +11,8 @@ public class PlayerDAO {
     public PlayerDAO() {
         this.conexaoBanco = new ConexaoBanco();
     }
+
+
 
     // Metodo para buscar um jogador pelo nome ou criá-lo se não existir
     public Player getOrCreatePlayer(String nome) {
@@ -23,6 +22,7 @@ public class PlayerDAO {
             save(player); // Salva o novo jogador no banco
             player = findByNome(nome); // Busca novamente para pegar o ID
         }
+
         return player;
     }
 
@@ -45,7 +45,7 @@ public class PlayerDAO {
     // Metodo para buscar um jogador pelo nome
     private Player findByNome(String nome) {
         String sql = "SELECT * FROM Player WHERE nome = ?";
-        Player player = null;
+        Player player = new Player(nome);
 
         try (Connection conn = conexaoBanco.getConexao();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -60,10 +60,13 @@ public class PlayerDAO {
                 player.setSaldo(rs.getDouble("saldo"));
             }
 
+            return player;
         } catch (SQLException e) {
             System.err.println("Erro ao buscar jogador: " + e.getMessage());
         }
+        System.out.println("Valor retornado pelo método findByNome: " + player);
         return player;
+
     }
 
     // Metodo para atualizar o saldo do jogador
@@ -80,5 +83,9 @@ public class PlayerDAO {
         } catch (SQLException e) {
             System.err.println("Erro ao atualizar saldo: " + e.getMessage());
         }
+    }
+
+    public ConexaoBanco getConexaoBanco() {
+        return conexaoBanco;
     }
 }

@@ -43,4 +43,8 @@ public class AlternativeDAO {
         return alternatives;
     }
 
+    public ConexaoBanco getConexaoBanco() {
+        return conexaoBanco;
+    }
+
 }

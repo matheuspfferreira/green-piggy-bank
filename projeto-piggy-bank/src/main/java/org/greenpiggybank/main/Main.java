@@ -1,10 +1,8 @@
 package org.greenpiggybank.main;
 
 import org.greenpiggybank.classes.gameLogic.Alternative;
-import org.greenpiggybank.database.PhaseDAO;
-import org.greenpiggybank.database.PlayerDAO;
+import org.greenpiggybank.database.*;
 import org.greenpiggybank.classes.player.Player;
-import org.greenpiggybank.database.QuestionDAO;
 import org.greenpiggybank.classes.gameLogic.Question;
 import org.greenpiggybank.classes.gameLogic.Utility;
 import org.greenpiggybank.classes.gameLogic.Phase;
@@ -13,14 +11,21 @@ import org.greenpiggybank.classes.gameLogic.Phase;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
+import java.lang.Object;
 
 public class Main {
 
     private static PlayerDAO playerDAO = new PlayerDAO();
     private static QuestionDAO questionDAO = new QuestionDAO();
     private static PhaseDAO phaseDAO = new PhaseDAO();
+    private static AlternativeDAO alternativeDAO = new AlternativeDAO();
 
     public static void main(String[] args) {
+        CreateTable.createPlayersTable(playerDAO.getConexaoBanco().getConexao());
+        CreateTable.createPhasesTable(phaseDAO.getConexaoBanco().getConexao());
+        CreateTable.createQuestionsTable(questionDAO.getConexaoBanco().getConexao());
+        CreateTable.createAlternativesTable(alternativeDAO.getConexaoBanco().getConexao());
+
         Utility.limparTela();
         System.out.println("======================================");
         System.out.println("🪙  BEM-VINDO AO COFRINHO VERDE  🪙");

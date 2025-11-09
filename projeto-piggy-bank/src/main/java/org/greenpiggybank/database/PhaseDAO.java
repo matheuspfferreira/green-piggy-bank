@@ -72,4 +72,8 @@ public class PhaseDAO {
         phase.setDescricao(rs.getString("descricao"));
         return phase;
     }
+
+    public ConexaoBanco getConexaoBanco() {
+        return conexaoBanco;
+    }
 }

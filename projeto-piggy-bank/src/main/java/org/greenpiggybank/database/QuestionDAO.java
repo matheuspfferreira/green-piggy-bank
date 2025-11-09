@@ -52,4 +52,8 @@ public class QuestionDAO {
         }
         return perguntas;
     }
+
+    public ConexaoBanco getConexaoBanco() {
+        return conexaoBanco;
+    }
 }

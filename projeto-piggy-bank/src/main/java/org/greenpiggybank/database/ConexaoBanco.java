@@ -6,21 +6,18 @@ import java.sql.DriverManager;
 
 public class ConexaoBanco {
 
-    private static final String local = "jdbc:mysql://localhost:3306/cofrinho_verde";
+    private static final String local = "jdbc:h2:./cofrinho_verde";
     private static final String usuario = "root";
     private static final String senha = "";
 
     public Connection getConexao(){
-        Connection conexao = null;
+        try {
+            return DriverManager.getConnection(local, usuario, senha);
 
-        try{
-
-            conexao = DriverManager.getConnection(local, usuario, senha);
-        } catch (SQLException e){
-            System.out.println("Erro para conectar com o banco de dados!");
+        } catch (SQLException e) {
+            throw new RuntimeException("Não foi possível conectar com o banco de dados", e);
         }
 
-        return conexao;
     }
 
 }
