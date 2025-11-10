@@ -4,6 +4,7 @@ public class Phase {
     private int id;
     private String nome_fase;
     private String descricao;
+    private String narrativa;
 
     public Phase(){}
 
@@ -25,7 +26,7 @@ public class Phase {
     }
 
     public void setNomeDaFase(String nome){
-        this.nome_fase = nome_fase;
+        this.nome_fase = nome;
     }
 
     public String getDescricao(){
@@ -34,6 +35,14 @@ public class Phase {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    public String getNarrativa() {
+        return narrativa;
+    }
+
+    public void setNarrativa(String narrativa) {
+        this.narrativa = narrativa;
     }
 
     @Override

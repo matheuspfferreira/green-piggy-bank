@@ -1,6 +1,5 @@
 package org.greenpiggybank.database;
 
-import org.greenpiggybank.database.ConexaoBanco;
 import org.greenpiggybank.classes.gameLogic.Phase;
 
 import java.sql.Connection;
@@ -70,6 +69,7 @@ public class PhaseDAO {
         phase.setId(rs.getInt("id"));
         phase.setNomeDaFase(rs.getString("nome_fase"));
         phase.setDescricao(rs.getString("descricao"));
+        phase.setNarrativa(rs.getString("narrativa"));
         return phase;
     }
 

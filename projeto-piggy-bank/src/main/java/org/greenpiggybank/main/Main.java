@@ -1,17 +1,19 @@
 package org.greenpiggybank.main;
 
 import org.greenpiggybank.classes.gameLogic.Alternative;
-import org.greenpiggybank.database.*;
-import org.greenpiggybank.classes.player.Player;
+import org.greenpiggybank.classes.gameLogic.Phase;
 import org.greenpiggybank.classes.gameLogic.Question;
 import org.greenpiggybank.classes.gameLogic.Utility;
-import org.greenpiggybank.classes.gameLogic.Phase;
+import org.greenpiggybank.classes.player.Player;
+import org.greenpiggybank.database.AlternativeDAO;
+import org.greenpiggybank.database.CreateTable;
+import org.greenpiggybank.database.PhaseDAO;
+import org.greenpiggybank.database.PlayerDAO;
+import org.greenpiggybank.database.QuestionDAO;
 
-
+import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
-import java.util.ArrayList;
-import java.lang.Object;
 
 public class Main {
 
@@ -26,18 +28,21 @@ public class Main {
         CreateTable.createQuestionsTable(questionDAO.getConexaoBanco().getConexao());
         CreateTable.createAlternativesTable(alternativeDAO.getConexaoBanco().getConexao());
 
+        try (Connection conn = phaseDAO.getConexaoBanco().getConexao()) {
+            CreateTable.populateInitialData(conn);
+        } catch (Exception e) {
+            System.out.println("Ops! Não foi possível inserir os dados iniciais: " + e.getMessage());
+        }
+
         Utility.limparTela();
-        System.out.println("======================================");
-        System.out.println("🪙  BEM-VINDO AO COFRINHO VERDE  🪙");
-        System.out.println("    Educação Financeira Gamificada");
-        System.out.println("======================================");
+        Utility.printBanner("🪙  BEM-VINDO AO COFRINHO VERDE  🪙", "Educação Financeira Gamificada");
 
         // 2. Login ou Criação do Jogador
         String nomeJogador = Utility.lerEntrada("\nDigite seu nome de usuário para começar:");
         Player jogador = playerDAO.getOrCreatePlayer(nomeJogador);
 
-        System.out.println("\nOlá, " + jogador.getNome() + "! É bom ter você aqui.");
-        Utility.lerEntrada("Pressione ENTER para ver as fases...");
+        System.out.println(Utility.colorize("\nOlá, " + jogador.getNome() + "! É bom ter você aqui.", Utility.BOLD, Utility.COLOR_GREEN));
+        Utility.lerEntrada(Utility.colorize("Pressione ENTER para ver as fases...", Utility.COLOR_WHITE));
 
         // 3. Loop Principal do Jogo (Menu de Fases)
         while (true) {
@@ -50,35 +55,36 @@ public class Main {
      * @param jogador O jogador logado.
      */
     private static void mostrarMenuFases(Player jogador) {
+        Utility.showLoading("Carregando fases");
+
         Utility.limparTela();
-        System.out.println("--- MENU PRINCIPAL ---");
-        // Exibe o status atual do jogador (Nome e Saldo)
-        System.out.println(jogador);
-        System.out.println("-------------------------");
-        System.out.println("Escolha uma fase para aprender e ganhar:");
+        System.out.println(Utility.colorize("--- MENU PRINCIPAL ---", Utility.BOLD, Utility.COLOR_CYAN));
+        System.out.println(Utility.colorize(jogador.toString(), Utility.COLOR_GREEN));
+        System.out.println(Utility.colorize("-------------------------", Utility.COLOR_CYAN));
+        System.out.println(Utility.colorize("Escolha uma fase para aprender e ganhar:", Utility.BOLD, Utility.COLOR_WHITE));
 
         // 4. Busca todas as fases do banco de dados
         List<Phase> fases = phaseDAO.findAll();
 
         if (fases.isEmpty()) {
-            System.out.println("\nNenhuma fase cadastrada no momento.");
-            System.out.println("Por favor, avise um administrador.");
-            Utility.lerEntrada("\nPressione ENTER para sair.");
+            System.out.println(Utility.colorize("\nNenhuma fase cadastrada no momento.", Utility.COLOR_RED, Utility.BOLD));
+            System.out.println(Utility.colorize("Por favor, avise um administrador.", Utility.COLOR_WHITE));
+            Utility.lerEntrada(Utility.colorize("\nPressione ENTER para sair.", Utility.COLOR_WHITE));
             System.exit(0); // Sai se não houver fases
             return;
         }
 
-        // Exibe as fases disponíveis
+        System.out.println();
         for (Phase f : fases) {
-            System.out.println(f.getId() + ") " + f.getNomeDaFase());
+            System.out.println(Utility.formatMenuOption(f.getId(), f.getNomeDaFase()));
         }
-        System.out.println("\n0) Sair do Jogo");
+        System.out.println("\n" + Utility.colorize(" 0) Sair do Jogo", Utility.COLOR_WHITE));
 
         // 5. Processa a escolha do usuário
-        int escolha = Utility.lerInt("\nSua escolha:");
+        int escolha = Utility.lerInt(Utility.colorize("\nSua escolha:", Utility.BOLD, Utility.COLOR_WHITE));
 
         if (escolha == 0) {
-            System.out.println("\nObrigado por jogar! Conhecimento é o melhor investimento.");
+            System.out.println(Utility.colorize("\nObrigado por jogar! Conhecimento é o melhor investimento.", Utility.COLOR_GREEN, Utility.BOLD));
             System.exit(0);
         }
 
@@ -88,8 +94,8 @@ public class Main {
             // Se a fase existe, inicia ela
             iniciarFase(jogador, faseEscolhida);
         } else {
-            System.out.println("Opção inválida! Tente novamente.");
-            Utility.lerEntrada("Pressione ENTER para continuar...");
+            System.out.println(Utility.colorize("Opção inválida! Tente novamente.", Utility.COLOR_RED, Utility.BOLD));
+            Utility.lerEntrada(Utility.colorize("Pressione ENTER para continuar...", Utility.COLOR_WHITE));
         }
     }
 
@@ -100,16 +106,20 @@ public class Main {
      */
     private static void iniciarFase(Player jogador, Phase fase) {
         Utility.limparTela();
-        System.out.println("🚀 INICIANDO: " + fase.getNomeDaFase().toUpperCase() + " 🚀");
-        System.out.println(fase.getDescricao());
-        Utility.lerEntrada("\nPressione ENTER para a primeira pergunta...");
+        System.out.println(Utility.colorize("🚀 INICIANDO: " + fase.getNomeDaFase().toUpperCase() + " 🚀", Utility.BOLD, Utility.COLOR_MAGENTA));
+        Utility.printWrapped(fase.getDescricao());
+        if (fase.getNarrativa() != null && !fase.getNarrativa().isBlank()) {
+            System.out.println();
+            Utility.printWrapped(fase.getNarrativa());
+        }
+        Utility.lerEntrada(Utility.colorize("\nPressione ENTER para a primeira pergunta...", Utility.COLOR_WHITE));
 
         // 6. Busca todas as perguntas daquela fase
         List<Question> perguntas = questionDAO.findByFaseId(fase.getId());
 
         if (perguntas.isEmpty()) {
-            System.out.println("Esta fase ainda não possui perguntas cadastradas.");
-            Utility.lerEntrada("Pressione ENTER para voltar ao menu...");
+            System.out.println(Utility.colorize("Esta fase ainda não possui perguntas cadastradas.", Utility.COLOR_RED, Utility.BOLD));
+            Utility.lerEntrada(Utility.colorize("Pressione ENTER para voltar ao menu...", Utility.COLOR_WHITE));
             return;
         }
 
@@ -120,10 +130,10 @@ public class Main {
 
         // 8. Fim da Fase
         Utility.limparTela();
-        System.out.println("🎉 FASE CONCLUÍDA: " + fase.getNomeDaFase() + " 🎉");
-        System.out.println("Parabéns, " + jogador.getNome() + "!");
-        System.out.println("Seu novo saldo é: R$" + String.format("%.2f", jogador.getSaldo()));
-        Utility.lerEntrada("\nPressione ENTER para voltar ao menu...");
+        System.out.println(Utility.colorize("🎉 FASE CONCLUÍDA: " + fase.getNomeDaFase() + " 🎉", Utility.BOLD, Utility.COLOR_GREEN));
+        System.out.println(Utility.colorize("Parabéns, " + jogador.getNome() + "!", Utility.COLOR_GREEN));
+        System.out.println(Utility.colorize("Seu novo saldo é: R$" + String.format("%.2f", jogador.getSaldo()), Utility.BOLD, Utility.COLOR_YELLOW));
+        Utility.lerEntrada(Utility.colorize("\nPressione ENTER para voltar ao menu...", Utility.COLOR_WHITE));
     }
 
     /**
@@ -133,12 +143,12 @@ public class Main {
      */
     private static void jogarPergunta(Player jogador, Question pergunta) {
         Utility.limparTela();
-        System.out.println(jogador); // Status (Nome e Saldo)
-        System.out.println("-------------------------");
-        System.out.println("PERGUNTA:");
-        System.out.println(pergunta.getTextoPergunta());
-        System.out.println("\nRECOMPENSA: R$" + String.format("%.2f", pergunta.getRecompensa()));
-        System.out.println("-------------------------");
+        System.out.println(Utility.colorize(jogador.toString(), Utility.COLOR_GREEN)); // Status (Nome e Saldo)
+        System.out.println(Utility.colorize("-------------------------", Utility.COLOR_CYAN));
+        System.out.println(Utility.colorize("PERGUNTA:", Utility.BOLD, Utility.COLOR_WHITE));
+        Utility.printWrapped(pergunta.getTextoPergunta());
+        System.out.println(Utility.colorize("\nRECOMPENSA: R$" + String.format("%.2f", pergunta.getRecompensa()), Utility.COLOR_YELLOW, Utility.BOLD));
+        System.out.println(Utility.colorize("-------------------------", Utility.COLOR_CYAN));
 
         List<Alternative> alternativas = pergunta.getAlternativas();
 
@@ -147,15 +157,15 @@ public class Main {
 
         for (int i = 0; i < alternativas.size(); i++) {
             // Exibe (1), (2), (3)...
-            System.out.println((i + 1) + ") " + alternativas.get(i).getTextoAlternativa());
+            System.out.println(Utility.formatMenuOption(i + 1, alternativas.get(i).getTextoAlternativa()));
         }
 
         // 9. Validação da Resposta
         int respostaNum = 0;
         while (respostaNum < 1 || respostaNum > alternativas.size()) {
-            respostaNum = Utility.lerInt("\nEscolha a alternativa (1-" + alternativas.size() + "):");
+            respostaNum = Utility.lerInt(Utility.colorize("\nEscolha a alternativa (1-" + alternativas.size() + "):", Utility.BOLD, Utility.COLOR_WHITE));
             if (respostaNum < 1 || respostaNum > alternativas.size()) {
-                System.out.println("Opção inválida. Tente novamente.");
+                System.out.println(Utility.colorize("Opção inválida. Tente novamente.", Utility.COLOR_RED, Utility.BOLD));
             }
         }
 
@@ -163,8 +173,8 @@ public class Main {
         Alternative respostaEscolhida = alternativas.get(respostaNum - 1); // -1 pois a lista começa em 0
 
         if (respostaEscolhida.isCorreta()) {
-            System.out.println("\n✅ CORRETO!");
-            System.out.println("Você ganhou + R$" + String.format("%.2f", pergunta.getRecompensa()));
+            System.out.println(Utility.colorize("\n✅ CORRETO!", Utility.BOLD, Utility.COLOR_GREEN));
+            System.out.println(Utility.colorize("Você ganhou + R$" + String.format("%.2f", pergunta.getRecompensa()), Utility.COLOR_YELLOW));
 
             // Atualiza o objeto do jogador
             jogador.setSaldo(jogador.getSaldo() + pergunta.getRecompensa());
@@ -173,16 +183,16 @@ public class Main {
             playerDAO.updateSaldo(jogador);
 
         } else {
-            System.out.println("\n❌ ERRADO!");
+            System.out.println(Utility.colorize("\n❌ ERRADO!", Utility.BOLD, Utility.COLOR_RED));
             // Mostra qual era a resposta correta
             for (Alternative alt : alternativas) {
                 if (alt.isCorreta()) {
-                    System.out.println("A resposta certa era: " + alt.getTextoAlternativa());
+                    System.out.println(Utility.colorize("A resposta certa era: " + alt.getTextoAlternativa(), Utility.COLOR_WHITE));
                     break;
                 }
             }
         }
 
-        Utility.lerEntrada("\nPressione ENTER para a próxima pergunta...");
+        Utility.lerEntrada(Utility.colorize("\nPressione ENTER para a próxima pergunta...", Utility.COLOR_WHITE));
     }
 }
